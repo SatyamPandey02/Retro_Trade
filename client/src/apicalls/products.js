@@ -13,10 +13,26 @@ export const AddProduct = async (payload) => {
 // get all products
 export const GetProducts = async (filters) => {
   try {
+    console.log("Fetching products with filters:", filters);
     const response = await axiosInstance.post("/api/products/get-products", filters);
-    return response.data;
+    console.log("Products API response:", response.data);
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data || [],
+      };
+    } else {
+      return {
+        success: false,
+        message: response.data.message || "Failed to fetch products",
+      };
+    }
   } catch (error) {
-    return error.response.data;
+    console.error("Error in GetProducts:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Failed to fetch products",
+    };
   }
 };
 

@@ -102,6 +102,12 @@ function Register() {
             </Form.Item>
           )}
 
+          {selectedRole === "user" && (
+            <Form.Item label="Address" name="address" rules={rules}>
+              <Input.TextArea rows={3} placeholder="Enter your address" />
+            </Form.Item>
+          )}
+
           <Button type="primary" htmlType="submit" block className="mt-2">
             Register
           </Button>

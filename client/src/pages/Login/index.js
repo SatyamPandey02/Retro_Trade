@@ -6,6 +6,7 @@ import { LoginUser } from "../../apicalls/users";
 import { useDispatch, useSelector } from "react-redux";
 import { SetLoader } from "../../redux/loadersSlice";
 import { SetUser } from "../../redux/usersSlice";
+import { debounce } from 'lodash';
 
 const rules = [
   {
@@ -47,6 +48,14 @@ function Login() {
       dispatch(SetUser(null));
     }
   }, []);
+
+  const debouncedSearch = debounce((value) => {
+    // Your search logic here
+  }, 300); // Adjust the delay as needed
+
+  const handleSearch = (value) => {
+    debouncedSearch(value);
+  };
 
   return (
     <div className="h-screen bg-primary flex justify-center items-center">

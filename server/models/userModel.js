@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "active",
     },
+    address: {
+      type: String,
+      default: "",
+    },
     profilePicture: {
       type: String,
       default: "",

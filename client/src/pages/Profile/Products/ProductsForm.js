@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AddProduct, EditProduct, UploadProductImage } from "../../../apicalls/products";
 import { SetLoader } from "../../../redux/loadersSlice";
 import React, { useEffect, useState } from "react";
-import { PlusOutlined, LoadingOutlined, EyeOutlined } from "@ant-design/icons";
+import { PlusOutlined, LoadingOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const additionalThings = [
   {
@@ -32,6 +32,18 @@ const rules = [
   },
 ];
 
+const numberRules = [
+  {
+    required: true,
+    message: "Required",
+  },
+  {
+    type: 'number',
+    min: 1,
+    message: 'Value must be greater than 0',
+  },
+];
+
 const categories = [
   "Electronics",
   "Home",
@@ -53,6 +65,9 @@ function ProductsForm({
   const { user } = useSelector((state) => state.users);
   const formRef = React.useRef(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
 
   useEffect(() => {
     if (selectedProduct) {
@@ -115,7 +130,6 @@ function ProductsForm({
 
       if (response.success) {
         message.success('Image uploaded successfully');
-        // Update the fileList with the new image
         const newFile = {
           uid: `-${fileList.length + 1}`,
           name: file.name,
@@ -133,12 +147,17 @@ function ProductsForm({
     }
   };
 
-  const uploadButton = (
-    <div>
-      {imageLoading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div style={{ marginTop: 8 }}>Upload</div>
-    </div>
-  );
+  const handlePreview = (file) => {
+    setPreviewImage(file.url);
+    setPreviewTitle(file.name);
+    setPreviewVisible(true);
+  };
+
+  const handleDelete = (file) => {
+    const updatedFileList = fileList.filter(f => f.uid !== file.uid);
+    setFileList(updatedFileList);
+    message.success('Image removed successfully');
+  };
 
   return (
     <Modal
@@ -163,12 +182,15 @@ function ProductsForm({
           </Col>
           <Col span={24}>
             <Form.Item label="Description" name="description" rules={rules}>
-              <TextArea rows={4} />
+              <textarea
+                className="w-full border border-gray-300 rounded p-2 h-24"
+                placeholder="Enter product description"
+              />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Price" name="price" rules={rules}>
-              <Input type="number" />
+            <Form.Item label="Price" name="price" rules={numberRules}>
+              <Input type="number" min="1" />
             </Form.Item>
           </Col>
           <Col span={8}>
@@ -184,8 +206,8 @@ function ProductsForm({
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Age" name="age" rules={rules}>
-              <Input type="number" />
+            <Form.Item label="Age" name="age" rules={numberRules}>
+              <Input type="number" min="1" />
             </Form.Item>
           </Col>
           {additionalThings.map((item) => (
@@ -199,29 +221,29 @@ function ProductsForm({
             <Form.Item label="Images">
               <div className="flex flex-wrap gap-4">
                 {fileList.map((file) => (
-                  <div key={file.uid} className="relative">
-                    <Image
+                  <div key={file.uid} className="relative group">
+                    <img
                       src={file.url}
                       alt={file.name}
-                      width={96}
-                      height={96}
-                      className="object-cover rounded"
-                      preview={{
-                        mask: <div className="flex items-center justify-center">
-                          <EyeOutlined className="text-white text-xl" />
-                        </div>,
-                      }}
+                      className="w-24 h-24 object-cover rounded cursor-pointer"
+                      onClick={() => handlePreview(file)}
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updatedFileList = fileList.filter(f => f.uid !== file.uid);
-                        setFileList(updatedFileList);
-                      }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center z-10"
-                    >
-                      ×
-                    </button>
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <EyeOutlined 
+                        className="text-white text-xl mr-2 cursor-pointer hover:text-blue-400" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePreview(file);
+                        }} 
+                      />
+                      <DeleteOutlined 
+                        className="text-white text-xl cursor-pointer hover:text-red-400" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(file);
+                        }} 
+                      />
+                    </div>
                   </div>
                 ))}
                 <Upload
@@ -239,14 +261,40 @@ function ProductsForm({
                     uploadImage(file);
                     return false;
                   }}
+                  accept="image/*"
                 >
-                  {fileList.length >= 8 ? null : uploadButton}
+                  {fileList.length >= 8 ? (
+                    <div className="text-gray-400">Maximum 8 images reached</div>
+                  ) : (
+                    <div>
+                      {imageLoading ? <LoadingOutlined /> : <PlusOutlined />}
+                      <div className="mt-2">Upload</div>
+                    </div>
+                  )}
                 </Upload>
               </div>
             </Form.Item>
           </Col>
         </Row>
       </Form>
+
+      <Modal
+        open={previewVisible}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+        width={800}
+        centered
+        className="preview-modal"
+      >
+        <div className="flex justify-center items-center h-[60vh]">
+          <img
+            alt={previewTitle}
+            src={previewImage}
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+      </Modal>
     </Modal>
   );
 }

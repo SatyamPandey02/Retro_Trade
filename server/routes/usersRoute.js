@@ -6,6 +6,7 @@ const authMiddleware = require("../middlwares/authMiddleware");
 const Product = require("../models/productModel");
 const nodemailer = require("nodemailer");
 const Bid = require("../models/bidModel");
+const Notification = require("../models/notificationsModel");
 
 // Create email transporter
 const transporter = nodemailer.createTransport({
@@ -85,6 +86,16 @@ router.post("/login", async (req, res) => {
 
     // create token
     const token = jwt.sign({ userId: user._id }, process.env.jwt_secret);
+
+    // Add a test notification
+    const newNotification = new Notification({
+      title: "Welcome to Retro Trade",
+      message: "Thank you for logging in. We hope you enjoy your experience!",
+      onClick: "/",
+      user: user._id,
+      read: false,
+    });
+    await newNotification.save();
 
     // send response
     res.send({

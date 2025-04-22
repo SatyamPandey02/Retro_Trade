@@ -16,23 +16,27 @@ function Products() {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const getData = async () => {
     try {
-      dispatch(SetLoader(true));
-      if (!user?._id) {
-        throw new Error("Please login to view your products");
-      }
+      setLoading(true);
+      console.log("Fetching products for user:", user._id);
       const response = await GetProducts({ seller: user._id });
-      dispatch(SetLoader(false));
+      console.log("Products response:", response);
+      
       if (response.success) {
-        setProducts(response.data);
+        setProducts(response.data || []);
       } else {
-        throw new Error(response.message);
+        message.error(response.message || "Failed to fetch products");
+        setProducts([]);
       }
     } catch (error) {
-      dispatch(SetLoader(false));
-      message.error(error.message);
+      console.error("Error fetching products:", error);
+      message.error("Failed to fetch products");
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,7 +65,7 @@ function Products() {
         <div className="flex items-center gap-2">
           <div className="relative group">
             <img
-              src={images?.length > 0 ? images[0] : ""}
+              src={images?.length > 0 ? images[0] : "https://via.placeholder.com/80"}
               alt={record.name}
               className="w-20 h-20 object-cover rounded-md cursor-pointer"
               onError={(e) => {
@@ -69,9 +73,11 @@ function Products() {
                 e.target.src = "https://via.placeholder.com/80";
               }}
               onClick={() => {
-                setPreviewImage(images[0]);
-                setPreviewTitle(record.name);
-                setPreviewVisible(true);
+                if (images?.length > 0) {
+                  setPreviewImage(images[0]);
+                  setPreviewTitle(record.name);
+                  setPreviewVisible(true);
+                }
               }}
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -140,8 +146,15 @@ function Products() {
   ];
 
   useEffect(() => {
-    getData();
-  }, []);
+    console.log("User state changed:", user);
+    if (user?._id) {
+      getData();
+    }
+  }, [user?._id]);
+
+  useEffect(() => {
+    console.log("Products state updated:", products);
+  }, [products]);
 
   return (
     <div className="container mx-auto">

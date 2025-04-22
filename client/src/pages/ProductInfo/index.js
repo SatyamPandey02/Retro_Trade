@@ -107,24 +107,29 @@ function ProductInfo() {
         <div className="grid grid-cols-2 gap-5 mt-5">
           {/* Images */}
           <div className="flex flex-col gap-5">
-            <img
-              src={product.images[selectedImageIndex]}
-              alt=""
-              className="w-full h-96 object-cover rounded-md"
-            />
-            <div className="flex gap-5">
+            <div className="relative w-full h-96 overflow-hidden rounded-md">
+              <img
+                src={product.images[selectedImageIndex]}
+                alt=""
+                className="w-full h-full object-contain bg-white"
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
+              />
+            </div>
+            <div className="flex gap-5 overflow-x-auto py-2">
               {product.images.map((image, index) => (
-                <img
+                <div 
                   key={index}
-                  src={image}
-                  alt=""
-                  className={`w-20 h-20 object-cover rounded-md cursor-pointer ${
-                    selectedImageIndex === index
-                      ? "border-2 border-green-700 p-1"
-                      : ""
+                  className={`relative flex-shrink-0 cursor-pointer ${
+                    selectedImageIndex === index ? "ring-2 ring-primary" : ""
                   }`}
                   onClick={() => setSelectedImageIndex(index)}
-                />
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    className="w-20 h-20 object-cover rounded-md"
+                  />
+                </div>
               ))}
             </div>
           </div>

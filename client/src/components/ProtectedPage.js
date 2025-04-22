@@ -43,12 +43,21 @@ function ProtectedPage({ children }) {
     try {
       const response = await GetAllNotifications();
       if (response.success) {
-        setNotifications(response.data);
-        const unreadNotifs = response.data.filter(item => !item.read);
-        setUnreadCount(unreadNotifs.length);
+        const newNotifications = response.data;
+        const newUnreadCount = newNotifications.filter(item => !item.read).length;
+        
+        if (newUnreadCount !== unreadCount) {
+          setUnreadCount(newUnreadCount);
+        }
+        
+        if (JSON.stringify(notifications) !== JSON.stringify(newNotifications)) {
+          setNotifications(newNotifications);
+        }
+      } else {
+        console.error("Failed to get notifications:", response.message);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching notifications:", error);
     }
   };
 
@@ -56,12 +65,13 @@ function ProtectedPage({ children }) {
     try {
       const response = await ReadAllNotifications();
       if (response.success) {
-        getNotifications();
+        setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+        setUnreadCount(0);
       } else {
-        throw new Error(response.message);
+        console.error("Failed to mark notifications as read:", response.message);
       }
     } catch (error) {
-      message.error(error.message);
+      console.error("Error marking notifications as read:", error);
     }
   };
 
@@ -81,12 +91,10 @@ function ProtectedPage({ children }) {
 
   useEffect(() => {
     getNotifications();
-  }, []);
-
-  useEffect(() => {
+    
     const interval = setInterval(() => {
       getNotifications();
-    }, 10000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -120,6 +128,9 @@ function ProtectedPage({ children }) {
               count={unreadCount}
               onClick={() => {
                 setShowNotifications(true);
+                if (unreadCount > 0) {
+                  readNotifications();
+                }
               }}
               className="cursor-pointer"
             >
@@ -142,15 +153,13 @@ function ProtectedPage({ children }) {
         {/* body */}
         <div className="p-5">{children}</div>
 
-        {
-          <Notifications
-            notifications={notifications}
-            showNotifications={showNotifications}
-            setShowNotifications={setShowNotifications}
-            setNotifications={setNotifications}
-            reloadNotifications={getNotifications}
-          />
-        }
+        <Notifications
+          notifications={notifications}
+          showNotifications={showNotifications}
+          setShowNotifications={setShowNotifications}
+          setNotifications={setNotifications}
+          reloadNotifications={getNotifications}
+        />
       </div>
     )
   );

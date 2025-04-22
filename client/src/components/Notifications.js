@@ -13,17 +13,9 @@ function Notifications({
 }) {
   const navigate = useNavigate();
 
-  const readNotifications = async () => {
-    try {
-      const response = await ReadAllNotifications();
-      if (response.success) {
-        reloadNotifications();
-      } else {
-        throw new Error(response.message);
-      }
-    } catch (error) {
-      message.error(error.message);
-    }
+  const handleNotificationClick = (notification) => {
+    setShowNotifications(false);
+    navigate(notification.onClick);
   };
 
   return (
@@ -35,25 +27,28 @@ function Notifications({
       width={500}
     >
       <div className="flex flex-col gap-2">
-        {notifications.map((notification) => (
-          <div
-            key={notification._id}
-            className={`flex flex-col gap-1 p-2 cursor-pointer border rounded
-              ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
-            onClick={() => {
-              navigate(notification.onClick);
-              setShowNotifications(false);
-            }}
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-gray-700">{notification.title}</h3>
-              <span className="text-gray-500 text-sm">
-                {moment(notification.createdAt).fromNow()}
-              </span>
-            </div>
-            <span className="text-gray-600">{notification.message}</span>
+        {notifications.length === 0 ? (
+          <div className="text-center text-gray-500 py-4">
+            No notifications
           </div>
-        ))}
+        ) : (
+          notifications.map((notification) => (
+            <div
+              key={notification._id}
+              className={`flex flex-col gap-1 p-2 cursor-pointer border rounded
+                ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
+              onClick={() => handleNotificationClick(notification)}
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold text-gray-700">{notification.title}</h3>
+                <span className="text-gray-500 text-sm">
+                  {moment(notification.createdAt).fromNow()}
+                </span>
+              </div>
+              <span className="text-gray-600">{notification.message}</span>
+            </div>
+          ))
+        )}
       </div>
     </Modal>
   );
